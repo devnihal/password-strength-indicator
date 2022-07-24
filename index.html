@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Strength Indicator</title>
+    <style>
+        *{
+            margin: 0px;
+            padding: 0px;
+            box-sizing: border-box;
+        }
+        body{
+            background-color: #ebebeb;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+        }
+        .container{
+            padding: 20px;
+            background-color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%,-50%);
+            box-shadow: 0px 0px 15px #454545;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+        }
+        .svg_container{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .password_container{
+            padding: 10px;
+        }
+        .meter_handle{
+            transform-origin: bottom;
+            transform: rotate(303deg)scale(0.75);
+            transition: 0.5s;
+        }
+        .password{
+            height: auto;
+            aspect-ratio:15/1;
+            width: 250px;
+            font-size: 20px;
+            outline: none;
+            border: 0px solid black;
+            border-bottom: 0px solid black;
+            border-radius: 2px;
+            transition: 0.2s;
+            padding-right: 40px;
+        }
+        .underline{
+            width: 0%;
+            height: 2px;
+            background-color: #000000c3;
+            display: block;
+            transition: 0.2s;
+            border-radius: 2px;
+            transform: translateX(-50%);
+            position: relative;
+            left: 50%;
+        }
+        .password:focus +.underline ,.password:valid+.underline{
+            width: 100%;
+            transition: 0.2s;
+        }
+        .password::placeholder{
+            color: #45454592;
+        }
+        .bottom_text{
+            position: fixed;
+            top: 100%;
+            left: 50%;
+            width: fit-content;
+            transform: translate(-50% , calc(-100% - 10px));
+            text-align: center;
+            font-size: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+        .copyBtn{
+            padding: 5px;
+            width: fit-content;
+            color: #000000c3;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 10px;
+            position: relative;
+            left: 100%;
+            transform: translate(-100%,calc(-100% - 10px));
+            transition: 0.2s;
+        }
+        .copyBtn:hover{
+            background-color: #cecece;
+            transition: 0.2s;
+        }
+        .genBtn{
+            padding: 5px;
+            width: fit-content;
+            color: #070810;
+            border-radius: 0px;
+            cursor: pointer;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0px;
+            transition: 0.2s;
+            background-color: #ffffff;
+        }
+        .genBtn:hover{
+            background-color: #c3c3c3c3;
+        }
+        .genbtncon{
+            display: flex;
+            flex-direction: row;
+            justify-content: space-evenly;
+        }
+        .charlength{
+            outline: none;
+            padding: 5px;
+            width: fit-content;
+            color: #070810;
+            border-radius: 0px;
+            cursor: pointer;
+            width: 30px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0px;
+            transition: 0.2s;
+            border: none;
+            background-color: #ffffff;
+        }
+        .remtext{
+            padding: 5px;
+            width: fit-content;
+            color: #070810;
+            border-radius: 0px;
+            cursor: pointer;
+            width: 30px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0px;
+            transition: 0.2s;
+            border: none;
+            background-color: #ffffff;
+        }
+        @media screen and (max-width:480px) {
+            .container{
+                transform: translate(-50%,-50%);
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+            .genbtncon{
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            .lenarea{
+                display: flex;
+                flex-direction: row;
+            }
+        }
+    </style>
+    <link rel="icon" href="data:image/png;base64,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">
+</head>
+<body>
+    <div class="container">
+        <div class="password_container">
+            <div class="input_el">
+                <input type="text" class="password" placeholder="Type Your Password" required>
+                <span class="underline"></span>
+            </div>
+            <div class="copyBtn">Copy</div>
+            <div class="genbtncon"><div class="genBtn" onclick="genpassword()">Generate Password</div> <div class="lenarea"><span class="remtext">Length:</span><input onblur="checklen(this)" maxlength="2" spellcheck="false"class="charlength" value="12"></div> </div>
+        </div>
+        <div class="svg_container">
+            <svg width="120" height="120" viewBox="0 0 120 120">
+             <g id="g3346" transform="matrix(1,0,0,0.85905263,0,18.716723)">
+               <path  id="path846"  style="fill:#48ff00;fill-opacity:1;fill-rule:evenodd"  d="M 13.607422,38.353516 9.0371094,36.164062 A 56.355076,56.355076 0 0 0 3.6445312,60.197266 56.355076,56.355076 0 0 0 4.484375,69.162109 H 4.537109 A 44.8279,44.8279 0 0 1 4.2851562,65.640625 44.8279,44.8279 0 0 1 13.607422,38.353516 Z" />
+               <path  id="path1158"  style="fill:#ff0000;fill-rule:evenodd"  d="m 78.548828,31.839844 a 44.8279,44.8279 0 0 1 15.392578,33.800781 44.8279,44.8279 0 0 1 -0.154297,3.521484 H 115.625 a 56.355076,56.355076 0 0 0 0.73047,-8.964843 56.355076,56.355076 0 0 0 -26.089845,-47.535157 z" />
+               <path  id="path1706"  style="fill:#ff0000;fill-rule:evenodd"  d="M 43.880859,6.2851562 A 56.355076,56.355076 0 0 0 42.789062,6.59375 l 0.332032,0.9355469 z" />
+               <path  id="path1704"  style="fill:#ff8800;fill-opacity:1;fill-rule:evenodd"  d="M 43.880859,6.2851562 43.121094,7.5292969 47.859375,20.871094 A 44.8279,44.8279 0 0 1 49.113281,20.8125 44.8279,44.8279 0 0 1 78.548828,31.839844 L 90.265625,12.662109 A 56.355076,56.355076 0 0 0 60,3.8417969 56.355076,56.355076 0 0 0 43.880859,6.2851562 Z" />
+               <path  id="path1285"  style="fill:#e2ff00;fill-opacity:1;fill-rule:evenodd"  d="M 47.859375,20.871094 42.789062,6.59375 A 56.355076,56.355076 0 0 0 9.0371094,36.164062 l 4.5703126,2.189454 A 44.8279,44.8279 0 0 1 47.859375,20.871094 Z" />
+             </g>
+             <g class="meter_handle" id="g3339">
+               <path  id="path2027"  style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke-width:0.649834"  d="m 66.164706,75.406937 c 4.368665,26.715923 -2.754475,34.101233 -6.152291,34.101233 -3.397816,0 -10.582376,-7.0097 -6.152291,-34.101233 L 60.012415,37.78352 Z" />
+               <circle  style="fill:#fffafa;fill-rule:evenodd;stroke-width:0.625"  id="path3138"  cx="60"  cy="101.82338"  r="3.2019932" />
+           </g>
+         </svg>
+         
+        </div>
+    </div>
+    <h1 class="bottom_text">Made With <svg width="20" height="20" fill="#ff328b"  viewBox="0 0 16 16">
+        <path fill-rule="evenodd" d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314z"/>
+      </svg> By Nihal</h1>
+    
+    <script>
+        var point = 0;
+var chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSRSTUVWXYZ!@#$%^&*()_+-=/<>/.,{}[]";
+var passwordel;
+var scale;
+var btn;
+window.addEventListener("load",()=>{
+    passwordel = document.querySelector(".password");
+    scale = document.querySelector(".meter_handle");
+    btn = document.querySelector(".copyBtn");
+    btn.addEventListener("click",(e)=>{
+        navigator.clipboard.writeText(passwordel.value)
+    })
+    scale.style.transform="scale(0.75)rotate(40deg)";
+    scale.ontransitionend=function(){
+        scale.style.transform="scale(0.75)rotate(-55deg)";
+        scale.ontransitionend=function(){
+            scale.style.transition="none";
+            scale.style.transform="scale(0.75)rotate(303deg)";
+            setTimeout(() => {
+                scale.style.transition="0.5s";
+                scale.ontransitionend=null;
+            }, 500);
+        }
+    }
+    passwordel.addEventListener("input",checkstrength)
+});
+    function checkstrength(){
+        point=0;
+        var password = passwordel.value;
+        if(password.legth!=0){
+            if(password.match(/[a-z]/)){
+                point+=1;
+            }
+            if(password.match(/[A-Z]/)){
+                point+=1;
+            }
+            if(password.match(/[0-9]/)){
+                point+=1;
+            }
+            if(password.match(/[\~\!\@\#\$\%\^\&\*\(\)\-\_\+\=\/\,\`\'\"\;\:\{\}\[\]]/)){
+                point+=1;
+            }
+            if(password.length>10){
+                point+=1;
+            }
+            if(point==0){
+                scale.style.transform="scale(0.75)rotate(303deg)";
+            }
+            else if(point==1){
+                scale.style.transform="scale(0.75)rotate(317deg)";
+            }
+            else if(point==2){
+                scale.style.transform="scale(0.75)rotate(327deg)";
+            }
+            else if(point==3){
+                scale.style.transform="scale(0.75)rotate(341deg)";
+            }
+            else if(point==4){
+                scale.style.transform="scale(0.75)rotate(364deg)";
+            }
+            else if(point==5){
+                scale.style.transform="scale(0.75)rotate(404deg)";
+            }
+        }
+    }
+function checklen(el){
+    if(Number(el.value)){
+        if(el.value<6 || el.value>25){
+            el.value=12;
+        }
+        else{
+            return;
+        }
+    }
+    else{
+        el.value="12"
+    }
+}
+
+function genpassword(){
+    var passlength = document.querySelector(".charlength").value;
+    var randpassword = "";
+    var availablecars = chars.split("");
+    for(i=0;i<passlength;i++){
+        var randint = Math.floor(Math.random()*availablecars.length);
+        randpassword+=availablecars[randint];
+    }
+    var password = randpassword;
+    point=0;
+        if(password.match(/[a-z]/)){
+            point+=1;
+        }
+        if(password.match(/[A-Z]/)){
+            point+=1;
+        }
+        if(password.match(/[0-9]/)){
+            point+=1;
+        }
+        if(password.match(/[\~\!\@\#\$\%\^\&\*\(\)\-\_\+\=\/\,\`\'\"\;\:\{\}\[\]]/)){
+            point+=1;
+        }
+        if(password.length>10){
+            point+=1;
+        }
+    if(point!=5){
+        genpassword()
+    }
+    else{
+        document.querySelector(".password").value = randpassword;
+        checkstrength()
+    }
+}
+    </script>
+</body>
+</html>
